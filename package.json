@@ -1,6 +1,10 @@
 {
   "name": "pintura-example-react-native",
-  "version": "1.0.0",
+  "version": "0.0.0",
+  "author": "Rik Schennink at PQINA",
+  "license": "https://pqina.nl/pintura/license/",
+  "homepage": "https://pqina.nl/pintura/",
+  "description": "A Pintura React example Project",
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "start": "expo start",
@@ -9,10 +13,16 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@pqina/pintura": "^8.57.9",
+    "@pqina/react-native-pintura": "9.x",
     "expo": "~48.0.15",
+    "expo-asset": "^8.9.1",
+    "expo-file-system": "^15.2.2",
+    "expo-image-picker": "^14.1.1",
     "expo-status-bar": "~1.4.4",
     "react": "18.2.0",
-    "react-native": "0.71.7"
+    "react-native": "0.71.7",
+    "react-native-webview": "11.26.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
