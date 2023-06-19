@@ -78,11 +78,11 @@ export default function App() {
             borderColor: "#eee",
           }}
           styleRules={`
-                        .pintura-editor {
-                            --color-background: 255, 255, 255;
-                            --color-foreground: 0, 0, 0;
-                        }
-                    `}
+              .pintura-editor {
+                  --color-background: 255, 255, 255;
+                  --color-foreground: 0, 0, 0;
+              }
+          `}
           markupEditorToolStyles={createMarkupEditorToolStyles({
             text: createMarkupEditorToolStyle("text", {
               fontSize: "10%",

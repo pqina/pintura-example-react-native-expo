@@ -1,4 +1,4 @@
-# Pintura React Native example project
+# Pintura React Native Expo example project
 
 Run `npm install` to install project dependencies, then run `npm start` to start the development server.
 
