@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@pqina/pintura": "^8.x",
-    "@pqina/react-native-pintura": "9.0.2",
+    "@pqina/react-native-expo-pintura": "^9.0.0",
     "expo": "~48.0.15",
     "expo-asset": "^8.9.1",
     "expo-file-system": "^15.2.2",

@@ -7,7 +7,7 @@ import {
   Platform,
   TouchableOpacity,
 } from "react-native";
-import PinturaEditor from "@pqina/react-native-pintura";
+import PinturaEditor from "@pqina/react-native-expo-pintura";
 import { useAssets } from "expo-asset";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
