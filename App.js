@@ -36,9 +36,9 @@ export default function App() {
 
   const [editorEnabled, setEditorEnabled] = useState(true);
 
-  const [editorImageSource, setEditorImageSource] = useState(undefined);
+  const [editorSource, setEditorSource] = useState(undefined);
 
-  const [editorImageResult, setEditorImageResult] = useState(undefined);
+  const [editorResult, setEditorResult] = useState(undefined);
 
   const editorRef = useRef(null);
 
@@ -60,10 +60,10 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      {editorImageResult && (
+      {editorResult && (
         <Image
           style={{ width: 100, height: 100 }}
-          source={{ uri: editorImageResult }}
+          source={{ uri: editorResult }}
         />
       )}
 
@@ -89,7 +89,7 @@ export default function App() {
             }),
           })}
           imageCropAspectRatio={1}
-          src={editorImageSource}
+          src={editorSource}
           onLoaderror={(err) => {
             console.log("onLoaderror", err);
           }}
@@ -101,7 +101,7 @@ export default function App() {
             console.log("onProcess", imageState, "size", dest.length);
 
             // preview
-            setEditorImageResult(dest);
+            setEditorResult(dest);
           }}
         />
       )}
@@ -127,7 +127,7 @@ export default function App() {
             FileSystem.readAsStringAsync(localUri, {
               encoding: FileSystem.EncodingType.Base64,
             }).then((base64) => {
-              setEditorImageSource(`data:image/jpeg;base64,${base64}`);
+              setEditorSource(`data:image/jpeg;base64,${base64}`);
             });
           }}
         >
@@ -150,17 +150,29 @@ export default function App() {
           style={buttonStyle}
           onPress={async () => {
             // Use ImagePicker to get a base64 image string
-            let { cancelled, base64 } =
-              await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsMultipleSelection: false,
-                quality: 1,
-                base64: true,
+            const res = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ImagePicker.MediaTypeOptions.All,
+              allowsMultipleSelection: false,
+              quality: 1,
+              base64: true,
+            });
+
+            const { canceled, assets } = res;
+            if (canceled) return;
+            const [asset] = assets;
+
+            // video to base64
+            let base64 = asset.base64;
+            let type = "image/jpeg";
+            if (!base64) {
+              base64 = await FileSystem.readAsStringAsync(asset.uri, {
+                encoding: FileSystem.EncodingType.Base64,
               });
+              type = "video/mp4";
+            }
 
-            if (cancelled) return;
-
-            setEditorImageSource(`data:image/jpeg;base64,${base64}`);
+            // send data url to editor
+            setEditorSource(`data:${type};base64,${base64}`);
           }}
         >
           <Text style={buttonTextStyle}>Browse...</Text>
