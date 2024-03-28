@@ -1,8 +1,13 @@
-const defaultAssetExts =
-  require("metro-config/src/defaults/defaults").assetExts;
+const { getDefaultConfig } = require('expo/metro-config');
 
-module.exports = {
-  resolver: {
-    assetExts: [...defaultAssetExts, "html"],
-  },
+module.exports = () => {
+  const config = getDefaultConfig(__dirname);
+  const { resolver } = config;
+
+  config.resolver = {
+    ...resolver,
+    assetExts: [...resolver.assetExts, "html"],
+  };
+
+  return config;
 };
