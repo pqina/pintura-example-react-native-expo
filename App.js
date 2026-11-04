@@ -7,29 +7,27 @@ import {
     Platform,
     TouchableOpacity,
 } from "react-native";
+import { useVideoPlayer, VideoView } from "expo-video";
 import PinturaEditor from "@pqina/react-native-expo-pintura";
 import { useAssets } from "expo-asset";
 import * as ImagePicker from "expo-image-picker";
-import * as FileSystem from "expo-file-system/legacy";
 
 import {
     createMarkupEditorToolStyle,
     createMarkupEditorToolStyles,
 } from "@pqina/pintura";
 
-const buttonStyle = {
-    backgroundColor: "#222",
-    paddingTop: 5,
-    paddingBottom: 5,
-    paddingHorizontal: 15,
-    borderRadius: 10,
-    marginHorizontal: 5,
+const isAssetOfType = (asset, types) => {
+    const extension = `${asset}`.split(".").pop();
+    if (!extension) {
+        return false;
+    }
+    return types.some((type) => extension.includes(type));
 };
 
-const buttonTextStyle = {
-    fontSize: 14,
-    color: "#fff",
-};
+const isImage = (asset) => isAssetOfType(asset, ["jpg", "jpeg", "png", "heic"]);
+
+const isVideo = (asset) => isAssetOfType(asset, ["mov", "mp4"]);
 
 export default function App() {
     const [assets, error] = useAssets([require("./assets/image.jpeg")]);
@@ -42,16 +40,27 @@ export default function App() {
 
     const editorRef = useRef(null);
 
-    // This requests permission to select camera roll images
+    const editorResultPlayer = useVideoPlayer(
+        isVideo(editorResult) ? editorResult : null,
+        (player) => {
+            // set player options
+        },
+    );
+
+    // This requests permission to select media from camera roll
     useEffect(() => {
         (async () => {
             // Not needed on Web
-            if (Platform.OS === "web") return;
+            if (Platform.OS === "web") {
+                return;
+            }
 
             // All fine when access granted
             const { status } =
                 await ImagePicker.requestMediaLibraryPermissionsAsync();
-            if (status === "granted") return;
+            if (status === "granted") {
+                return;
+            }
 
             // Show message if not allowed
             alert("Sorry, we need camera roll permissions to make this work!");
@@ -60,29 +69,23 @@ export default function App() {
 
     return (
         <View style={styles.container}>
-            {editorResult && (
-                <Image
-                    style={{ width: 100, height: 100 }}
-                    source={{ uri: editorResult }}
-                />
+            {isImage(editorResult) && (
+                <Image style={styles.output} source={{ uri: editorResult }} />
+            )}
+
+            {isVideo(editorResult) && (
+                <VideoView style={styles.output} player={editorResultPlayer} />
             )}
 
             {/* The Pintura Editor component */}
             {editorEnabled && (
                 <PinturaEditor
                     ref={editorRef}
-                    style={{
-                        width: "95%",
-                        height: "80%",
-                        borderWidth: 1,
-                        borderColor: "#eee",
-                    }}
-                    styleRules={`
-              .pintura-editor {
-                  --color-background: 255, 255, 255;
-                  --color-foreground: 0, 0, 0;
-              }
-          `}
+                    style={styles.editor}
+                    styleRules={`.pintura-editor {
+                        --color-background: 255, 255, 255;
+                        --color-foreground: 0, 0, 0;
+                    }`}
                     markupEditorToolStyles={createMarkupEditorToolStyles({
                         text: createMarkupEditorToolStyle("text", {
                             fontSize: "10%",
@@ -97,13 +100,8 @@ export default function App() {
                         console.log("onLoad", size);
                     }}
                     onProcess={({ dest, imageState }) => {
-                        // dest is output file in dataURI format
-                        console.log(
-                            "onProcess",
-                            imageState,
-                            "size",
-                            dest.length,
-                        );
+                        // dest is output file uri
+                        console.log("onProcess", dest);
 
                         // preview
                         setEditorResult(dest);
@@ -111,79 +109,62 @@ export default function App() {
                 />
             )}
 
-            <View style={{ flexDirection: "row", marginTop: 20 }}>
+            <View style={styles.buttonRow}>
                 {/* Example removing and adding the editor */}
                 <TouchableOpacity
-                    style={buttonStyle}
+                    style={styles.button}
                     onPress={() => {
                         setEditorEnabled(!editorEnabled);
                     }}
                 >
-                    <Text style={buttonTextStyle}>Toggle</Text>
+                    <Text style={styles.buttonText}>Toggle</Text>
                 </TouchableOpacity>
 
                 {/* Example updating editor image source */}
                 <TouchableOpacity
-                    style={buttonStyle}
+                    style={styles.button}
                     onPress={() => {
                         // load local asset
                         const [image] = assets;
-                        const { localUri } = image;
-                        FileSystem.readAsStringAsync(localUri, {
-                            encoding: FileSystem.EncodingType.Base64,
-                        }).then((base64) => {
-                            setEditorSource(`data:image/jpeg;base64,${base64}`);
-                        });
+                        setEditorSource(image.localUri);
                     }}
                 >
-                    <Text style={buttonTextStyle}>Test image</Text>
+                    <Text style={styles.buttonText}>Test image</Text>
                 </TouchableOpacity>
 
                 {/* Example running an editor function */}
                 <TouchableOpacity
-                    style={buttonStyle}
+                    style={styles.button}
                     onPress={() => {
                         // Run editor function
                         editorRef.current.editor.history.undo();
                     }}
                 >
-                    <Text style={buttonTextStyle}>Undo</Text>
+                    <Text style={styles.buttonText}>Undo</Text>
                 </TouchableOpacity>
 
                 {/* Example selecting a library image */}
                 <TouchableOpacity
-                    style={buttonStyle}
+                    style={styles.button}
                     onPress={async () => {
                         // Use ImagePicker to get a base64 image string
                         const res = await ImagePicker.launchImageLibraryAsync({
-                            mediaTypes: ImagePicker.MediaTypeOptions.All,
+                            mediaTypes: ["images", "videos"],
                             allowsMultipleSelection: false,
                             quality: 1,
-                            base64: true,
                         });
 
                         const { canceled, assets } = res;
-                        if (canceled) return;
-                        const [asset] = assets;
-
-                        // video to base64
-                        let base64 = asset.base64;
-                        let type = "image/jpeg";
-                        if (!base64) {
-                            base64 = await FileSystem.readAsStringAsync(
-                                asset.uri,
-                                {
-                                    encoding: FileSystem.EncodingType.Base64,
-                                },
-                            );
-                            type = "video/mp4";
+                        if (canceled) {
+                            return;
                         }
 
-                        // send data url to editor
-                        setEditorSource(`data:${type};base64,${base64}`);
+                        // send first selected asset
+                        const [asset] = assets;
+                        setEditorSource(asset.uri);
                     }}
                 >
-                    <Text style={buttonTextStyle}>Browse...</Text>
+                    <Text style={styles.buttonText}>Browse...</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -192,9 +173,45 @@ export default function App() {
 
 const styles = StyleSheet.create({
     container: {
+        padding: 15,
+        paddingTop: 65,
+        paddingBottom: 25,
+        gap: 15,
         flex: 1,
         backgroundColor: "#fff",
         alignItems: "center",
-        justifyContent: "center",
+        justifyContent: "space-between",
+    },
+    output: {
+        width: "100%",
+        height: 100,
+        objectFit: "contain",
+        borderWidth: 1,
+        borderColor: "#eee",
+        borderRadius: 15,
+    },
+    editor: {
+        width: "100%",
+        flex: 1,
+        borderWidth: 1,
+        borderColor: "#eee",
+        borderRadius: 15,
+        overflow: "hidden",
+    },
+    buttonRow: {
+        flexDirection: "row",
+        gap: 1,
+        borderRadius: 15,
+        overflow: "hidden",
+    },
+    button: {
+        backgroundColor: "#222",
+        paddingTop: 5,
+        paddingBottom: 5,
+        paddingHorizontal: 15,
+    },
+    buttonText: {
+        fontSize: 14,
+        color: "#fff",
     },
 });

@@ -1,13 +1,20 @@
-const { getDefaultConfig } = require('expo/metro-config');
+const path = require("path");
+const { getDefaultConfig } = require("expo/metro-config");
 
-module.exports = () => {
-  const config = getDefaultConfig(__dirname);
-  const { resolver } = config;
+const config = getDefaultConfig(__dirname);
+const componentRoot = path.resolve(
+    __dirname,
+    // this allows installing a local dev version of the pintura component
+    // "../pintura-component-react-native-expo",
+);
 
-  config.resolver = {
-    ...resolver,
-    assetExts: [...resolver.assetExts, "html"],
-  };
+config.watchFolders = [...config.watchFolders, componentRoot];
+config.resolver.nodeModulesPaths = [
+    path.resolve(__dirname, "node_modules"),
+    ...config.resolver.nodeModulesPaths,
+];
 
-  return config;
-};
+// Preserve the existing HTML asset configuration.
+config.resolver.assetExts = [...config.resolver.assetExts, "html"];
+
+module.exports = config;
