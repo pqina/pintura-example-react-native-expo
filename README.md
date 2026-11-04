@@ -2,7 +2,9 @@
 
 Run `npm install` to install project dependencies, then run `npm start` to start the development server.
 
-After updating `@pqina/pintura` or `@pqina/pintura-video` we need to run `npm rebuild` to rebuild the WebView component.
+After updating `@pqina/pintura`, `@pqina/pintura-video`, or `meidabunny` we need to run `npm rebuild` to rebuild the WebView component.
+
+More information can be found on: https://pqina.nl/pintura/docs/v8/installation/react-native/
 
 ## License
 
